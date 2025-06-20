@@ -1,0 +1,22 @@
+# Core ML/DL libraries
+torch>=1.12.0
+torchvision>=0.13.0
+scikit-learn>=1.1.0
+pandas>=1.4.0
+numpy>=1.21.0
+
+# Data visualization
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Web application
+streamlit>=1.28.0
+plotly>=5.15.0
+
+# Jupyter notebook support
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Additional utilities
+tqdm>=4.64.0
+joblib>=1.1.0

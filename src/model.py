@@ -7,126 +7,6 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-class LoanPredictionANN(nn.Module):
-    """
-    Neural Network for Loan Prediction
-    
-    Architecture:
-    - Input: 9 features
-    - Hidden Layer 1: 64 neurons (ReLU)
-    - Hidden Layer 2: 32 neurons (ReLU) 
-    - Hidden Layer 3: 16 neurons (ReLU)
-    - Output: 1 neuron (Sigmoid)
-    - Dropout: Progressive rates [0.3, 0.2, 0.1]
-    """
-    
-    def __init__(self, input_size=9, hidden_sizes=[64, 32, 16], dropout_rates=[0.3, 0.2, 0.1]):
-        super(LoanPredictionANN, self).__init__()
-        
-        self.input_size = input_size
-        self.hidden_sizes = hidden_sizes
-        self.dropout_rates = dropout_rates
-        
-        # Input layer to first hidden layer
-        self.fc1 = nn.Linear(input_size, hidden_sizes[0])
-        self.dropout1 = nn.Dropout(dropout_rates[0])
-        
-        # Hidden layers
-        self.fc2 = nn.Linear(hidden_sizes[0], hidden_sizes[1])
-        self.dropout2 = nn.Dropout(dropout_rates[1])
-        
-        self.fc3 = nn.Linear(hidden_sizes[1], hidden_sizes[2])
-        self.dropout3 = nn.Dropout(dropout_rates[2])
-        
-        # Output layer
-        self.fc4 = nn.Linear(hidden_sizes[2], 1)
-        
-        # Initialize weights
-        self._initialize_weights()
-    
-    def _initialize_weights(self):
-        """Initialize weights using Xavier/Glorot initialization"""
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.xavier_uniform_(module.weight)
-                nn.init.zeros_(module.bias)
-    
-    def forward(self, x):
-        """Forward pass through the network"""
-        # First hidden layer
-        x = F.relu(self.fc1(x))
-        x = self.dropout1(x)
-        
-        # Second hidden layer
-        x = F.relu(self.fc2(x))
-        x = self.dropout2(x)
-        
-        # Third hidden layer
-        x = F.relu(self.fc3(x))
-        x = self.dropout3(x)
-        
-        # Output layer
-        x = torch.sigmoid(self.fc4(x))
-        
-        return x
-    
-    def predict_proba(self, x):
-        """Get prediction probabilities"""
-        self.eval()
-        with torch.no_grad():
-            if isinstance(x, np.ndarray):
-                x = torch.FloatTensor(x)
-            return self.forward(x).numpy()
-    
-    def predict(self, x, threshold=0.5):
-        """Get binary predictions"""
-        probabilities = self.predict_proba(x)
-        return (probabilities >= threshold).astype(int)
-
-
-class LoanPredictionLightANN(nn.Module):
-    """
-    Lighter version of the neural network for faster training
-    
-    Architecture:
-    - Input: 9 features
-    - Hidden Layer 1: 32 neurons (ReLU)
-    - Hidden Layer 2: 16 neurons (ReLU)
-    - Output: 1 neuron (Sigmoid)
-    - Dropout: [0.2, 0.1]
-    """
-    
-    def __init__(self, input_size=9):
-        super(LoanPredictionLightANN, self).__init__()
-        
-        self.fc1 = nn.Linear(input_size, 32)
-        self.dropout1 = nn.Dropout(0.2)
-        
-        self.fc2 = nn.Linear(32, 16)
-        self.dropout2 = nn.Dropout(0.1)
-        
-        self.fc3 = nn.Linear(16, 1)
-        
-        self._initialize_weights()
-    
-    def _initialize_weights(self):
-        for module in self.modules():
-            if isinstance(module, nn.Linear):
-                nn.init.xavier_uniform_(module.weight)
-                nn.init.zeros_(module.bias)
-    
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = self.dropout1(x)
-        
-        x = F.relu(self.fc2(x))
-        x = self.dropout2(x)
-        
-        x = torch.sigmoid(self.fc3(x))
-        
-        return x
-
-
 class LoanPredictionDeepANN(nn.Module):
     """
     Deeper version for maximum performance
@@ -211,13 +91,14 @@ def calculate_class_weights(y):
 
 
 def evaluate_model(model, X_test, y_test, threshold=0.5):
-    """Comprehensive model evaluation"""
+    """Comprehensive model evaluation - updated for logits output"""
     model.eval()
     
     # Get predictions
     with torch.no_grad():
         X_test_tensor = torch.FloatTensor(X_test)
-        y_pred_proba = model(X_test_tensor).numpy().flatten()
+        y_logits = model(X_test_tensor)
+        y_pred_proba = torch.sigmoid(y_logits).numpy().flatten()
         y_pred = (y_pred_proba >= threshold).astype(int)
     
     # Calculate metrics
@@ -315,7 +196,7 @@ if __name__ == "__main__":
     print(f"Feature names: {feature_names}")
     
     # Create model
-    model = LoanPredictionANN()
+    model = LoanPredictionDeepANN()
     model_summary(model)
     
     print("\nModel created successfully!")
